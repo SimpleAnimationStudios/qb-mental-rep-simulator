@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Pocket IQ 3D — QB Mental Reps</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="stage"></div>
+<div id="badges"></div>
+
+<header id="hud-top">
+  <button id="menu-btn" class="ghost" title="Menu: modes, custom plays, progress">☰</button>
+  <div class="brand">POCKET<b>IQ</b> <span id="mode-tag"></span></div>
+  <div class="call"><span id="concept">—</span><span id="dd">—</span></div>
+  <div class="right">
+    <select id="mode-sel" title="Mode (Passing / Running / Normal)"></select>
+    <select id="difficulty" title="Difficulty">
+      <option value="youth">Youth</option><option value="rookie">High School</option><option value="starter" selected>College</option><option value="pro">Pro</option>
+    </select>
+    <button id="q-det" class="ghost tiny qt" title="Detailed calls (family + variant)">Detail</button>
+    <button id="q-unl" class="ghost tiny qt" title="Unlimited pre-snap time">∞</button>
+    <button id="view-btn" class="ghost" title="Toggle coach view (C)">Coach view</button>
+    <div class="stat">SIM avg <b id="avg">—</b></div>
+    <div class="stat">Streak <b id="streak">0</b></div>
+  </div>
+</header>
+
+<div id="phase"></div>
+
+<div id="clock"><div id="clock-fill"></div><span id="clock-label"></span></div>
+
+<section id="presnap" class="bubbles">
+  <div class="pop" id="pop-cov" hidden>
+    <div class="pt">COVERAGE <small>family → variant</small></div>
+    <div class="grp"><div id="cov-choices" class="choices"></div></div>
+    <div class="grp" id="var-grp"><span class="lbl">VARIANT</span><div id="var-choices" class="choices"></div></div>
+    <div class="pt">PRESSURE <small>family → blitz</small></div>
+    <div class="grp"><div id="pres-choices" class="choices"></div></div>
+    <div class="grp" id="pvar-grp"><span class="lbl">BLITZ</span><div id="pvar-choices" class="choices"></div></div>
+    <div class="pdesc" id="cov-desc"></div>
+  </div>
+  <div class="pop" id="pop-prot" hidden>
+    <div class="pt">PROTECTION <small>O-line call</small></div>
+    <div class="grp" id="prot-grp"><div id="prot-choices" class="choices col"></div><select id="prot-sel" title="Protection call" hidden></select></div>
+  </div>
+  <div class="pop" id="pop-aud" hidden>
+    <div class="pt">AUDIBLE <small id="aud-mode"></small></div>
+    <div class="grp" id="aud-grp"><div id="aud-choices" class="choices col"></div></div>
+  </div>
+  <div class="brow">
+    <button class="bubble" id="b-cov" data-pop="pop-cov"><span>COVERAGE</span><small></small></button>
+    <button class="bubble" id="b-prot" data-pop="pop-prot"><span>PROTECTION</span><small></small></button>
+    <button class="bubble" id="b-aud" data-pop="pop-aud"><span>AUDIBLE</span><small></small></button>
+    <button class="bubble snap" id="snap-btn" title="Snap (Space / Enter)"><span>SNAP</span><small id="presnap-timer"></small></button>
+  </div>
+</section>
+<div id="call-chip" hidden></div>
+<div id="prot-chip" hidden></div>
+<div id="taunt" hidden></div>
+<div id="banner" hidden></div>
+<div id="caption" hidden></div>
+<button id="routes-btn" title="Hold to show routes (R)">ROUTES<small>hold</small></button>
+
+<section id="result" class="panel" hidden>
+  <div class="ph"><span id="res-outcome">—</span><span class="sim" hidden>SIM <b id="sim-score">0</b></span></div>
+  <p id="res-why" class="res-why"></p>
+  <div id="res-extra"></div>
+  <div id="res-sections"></div>
+  <button type="button" id="res-more-btn" class="ghost small res-more-btn">More details ▾</button>
+  <div id="res-more" hidden>
+    <div id="bars"></div>
+    <ul id="res-list"></ul>
+    <p id="res-coach"></p>
+  </div>
+  <div class="row">
+    <button id="replay-btn" class="ghost">Replay</button>
+    <button id="history-btn" class="ghost">Progress</button>
+    <button id="next-btn" class="primary">Next rep <small>(space)</small></button>
+  </div>
+</section>
+
+<section id="history" class="panel" hidden>
+  <div class="ph"><span>PROGRESS</span><button id="hist-close" class="ghost small">✕</button></div>
+  <div id="hist-body"></div>
+  <label class="setting"><input type="checkbox" id="opt-unlimited"> Unlimited pre-snap time (snap manually: SNAP / Space / Enter)</label>
+  <label class="setting"><input type="checkbox" id="opt-detailed"> Detailed coverage calls (family + variant) <button id="opt-detailed-auto" class="ghost tiny">auto by difficulty</button></label>
+  <label class="setting"><input type="checkbox" id="routes-pro"> Allow ROUTES preview at Pro</label>
+  <button id="reset-btn" class="ghost small">Clear history</button>
+</section>
+
+<section id="menu" class="panel" hidden>
+  <div class="ph"><span>MENU</span><button id="menu-close" class="ghost small">✕</button></div>
+  <div class="lbl">Mode</div>
+  <div id="menu-modes"></div>
+  <div class="lbl">Settings</div>
+  <label class="setting">Camera <select id="cam-sel"><option value="pulled">Pulled-back (default)</option><option value="classic">Classic QB view (v3/v4)</option><option value="eye">QB eye level (realistic)</option></select></label>
+  <label class="setting">Stadium <select id="set-stadium"><option value="bowl">Outdoor Bowl</option><option value="dome">Indoor Dome</option><option value="hs">High School</option></select></label>
+  <label class="setting">Graphics <select id="gfx-sel"><option value="auto">Auto (adaptive)</option><option value="high">High</option><option value="low">Low</option></select> <small id="gfx-note"></small></label>
+  <div class="row" style="margin-top:8px"><button id="menu-custom" class="ghost">✎ Custom plays</button><button id="menu-progress" class="ghost">Progress</button></div>
+</section>
+
+<section id="designer" class="panel" hidden></section>
+
+<div id="help">Drag / ←→ scan · tap receiver or 1–4 throw · hold R routes · C coach view · P replay</div>
+
+<script src="js/data.js"></script>
+<script src="js/playbook.js"></script>
+<script src="js/protections.js"></script>
+<script src="js/runplay.js"></script>
+<script src="js/defense.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/reads.js"></script>
+<script src="js/audible-ev.js"></script>
+<script src="js/modes.js"></script>
+<script src="js/grading.js"></script>
+<script src="js/customplay.js"></script>
+<script type="module" src="js/game3d.js"></script>
+<script src="js/hub.js"></script>
+</body>
+</html>

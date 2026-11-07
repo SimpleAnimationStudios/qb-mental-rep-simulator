@@ -1,0 +1,13 @@
+# Local dependencies, credentials, generated test output and editor files
+node_modules/
+.env
+.env.*
+*.pem
+*.key
+*.log
+screenshots/
+test-results/
+playwright-report/
+__pycache__/
+.DS_Store
+.vscode/
