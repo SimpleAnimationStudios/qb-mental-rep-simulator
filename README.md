@@ -466,3 +466,20 @@ node tests/pwa-check.cjs          # manifest, icon sizes, relative paths, precac
 node tests/playwright-pwa.cjs     # Chromium: root + nested sub-path, SW scope/cache, OFFLINE reload + full rep + worker,
                                   # Chrome installability (no errors), update flow; starts its own servers on 8766-8768
 ```
+
+## v13 — Practice builder (multi-select plays and coverages)
+
+Home → 🎯 Practice now builds a rep list:
+
+- **Offense**: **🎲 Fully random** draws from exactly the same pool as Free Play for the current mode (`QBModes.pool(mode)`: Normal = passes + runs, Passing = passes, Running = runs). **☑ Choose plays** shows that same full list; pick any plays, use **Concept sets** to add/remove every version of a concept at once, or **+ All passes / + All runs**. Plays outside the current mode are never used.
+- **Defense**: **☑ Choose coverages** (any mix of the 17 coverages, grouped Cover 0–4, with a tap-to-toggle-all family header) or **Each play's own look** (Free Play behaviour). Reps use only the coverages you selected. A play's blitz is kept only when it fits the look: an all-out ZERO blitz only with Cover 0, otherwise the rep has no called blitz. Protection settings are unchanged.
+- **Shuffle bags**: the offense and the defense each draw from an independent shuffle bag. Every selected item appears once before any repeats, and there are no back-to-back repeats across rounds. A single selection stays fixed. Bags restart on each new Practice session.
+- **Validation**: an empty selection (Select none) disables ▶ REP IT and says what is missing. It never falls back silently to "all".
+- **Grading**: grading is unchanged for every authored play and look. When Practice puts a play in front of a different coverage:
+  - Concepts with a reads table (`js/reads.js`) are graded from the table for the new coverage.
+  - Other concepts use the existing engine probe fallback, flag `lookProbe`, the same path custom plays already use. The authored answer for these concepts belonged to the old look.
+- **Saved choices**: these are stored inside the existing profile, `localStorage['pocketiq.v8'].prefs.practice = { offense: 'random'|'pick', plays: [playId…], defense: 'own'|'pick', covs: [coverageKey…] }`. Other prefs are untouched. A Practice session record stores a short label string in `sessions[].practice` (e.g. `"Smash + Four Verticals vs 3 coverages"`).
+- **Code**: the logic is in `js/practice.js` (pure, Node-testable) and the UI is in `js/hub.js` `showPractice()`. The service-worker shell is `v13-practice1`, and `js/practice.js` is precached.
+- **Tests**:
+  - `node tests/practice-unit.cjs` covers bag fairness, empty input, Free Play pool parity and grading paths.
+  - `node tests/playwright-practice.cjs`, with a server on :8766, covers the layout on desktop/phone/landscape/320px with long names, 24 real reps with only the selected plays and coverages (all of them reached), Fully random diversity, persistence and Free Play being unaffected.

@@ -132,6 +132,20 @@
   #res-extra .seen{font-size:12px;line-height:1.5}#res-extra .tbar{position:relative;height:10px;background:#1f2937;border-radius:5px;margin-top:6px}
   #res-extra .tbar i{position:absolute;top:-3px;width:3px;height:16px;border-radius:2px}#res-extra .tbar .win{position:absolute;top:0;height:100%;background:#16a34a66;border-radius:5px}
   .pi-cardlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}.pi-cc{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:10px}.pi-cc h4{margin:2px 0 6px}.pi-cc p{font-size:12px;color:#cbd5e1;margin:4px 0}
+  /* v13 practice builder: big tap targets, wrapping text, sticky start bar, no sideways scroll */
+  .pi-prac{min-width:0;overflow:hidden}.pi-tap{min-height:44px;padding:10px 15px}.pi-chip.part{border-color:#3ee08f;box-shadow:inset 0 0 0 1px #3ee08f}.pi-chip small{opacity:.75;font-weight:600}
+  .pi-seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0 8px}.pi-seg .pi-chip{border-radius:12px;white-space:normal}
+  .pi-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}.pi-cs .pi-chip{max-width:100%;white-space:normal;overflow-wrap:anywhere;text-align:left}
+  .pi-optlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:6px;min-width:0}
+  .pi-grp{grid-column:1/-1;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;margin:10px 0 2px;text-align:left}
+  .pi-grpbtn{background:none;border:0;border-bottom:1px solid #1e293b;color:#cbd5e1;font:inherit;font-size:12px;min-height:44px;cursor:pointer;padding:6px 2px;overflow-wrap:anywhere}.pi-grpbtn small{text-transform:none;letter-spacing:0;color:#64748b}
+  .pi-opt{display:flex;align-items:center;gap:10px;min-height:48px;min-width:0;width:100%;text-align:left;background:#111827;border:1px solid #334155;color:#e5e7eb;border-radius:12px;padding:8px 12px;cursor:pointer;font:inherit}
+  .pi-opt span{display:flex;flex-direction:column;min-width:0;overflow-wrap:anywhere}.pi-opt b{font-size:14px}.pi-opt em{font-style:normal;font-size:12px;color:#94a3b8}
+  .pi-opt.on{border-color:#3ee08f;background:#0b2a1c}.pi-box{flex:none;width:22px;height:22px;border-radius:6px;border:2px solid #475569;display:grid;place-items:center;font-style:normal;font-weight:900;color:#052e16}.pi-opt.on .pi-box{background:#3ee08f;border-color:#3ee08f}
+  .pi-gobar{position:sticky;bottom:0;z-index:2;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;text-align:center;margin:12px -6px 0;padding:10px 8px calc(10px + env(safe-area-inset-bottom,0px));background:#081022;border-top:1px solid #1e293b;border-radius:14px 14px 0 0;box-shadow:0 -10px 24px #060b16}
+  .pi-gobar #pi-pr-err{flex:1 1 220px;min-width:0;overflow-wrap:anywhere}.pi-play:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+  #pi-pr-prev summary{cursor:pointer;min-height:44px;display:flex;align-items:center}
+  @media (max-height:500px){.pi-gobar{padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))}.pi-gobar .pi-play{font-size:17px;padding:11px 26px;min-height:44px}.pi-gobar #pi-pr-err{font-size:12px}}
   .pi-toast{position:fixed;left:50%;top:80px;transform:translateX(-50%);z-index:80;background:#14532d;color:#dcfce7;border-radius:12px;padding:10px 16px;font-weight:700;box-shadow:0 10px 30px #0008}
   `;
   function toast(t) { document.querySelectorAll('.pi-toast').forEach((x) => x.remove()); const d = el('div', 'pi-toast', t); document.body.appendChild(d); setTimeout(() => d.remove(), 2600); }
@@ -221,7 +235,7 @@
   }
   function startSession(o) {
     const level = P.level, mode = P.prefs.mode || M.getMode(), ps = o.practice ? null : P.prefs.playset;
-    S.active = { scored: !!o.scored && !o.practice, practice: o.practice || null, level, mode, playset: ps, reps: [], at: new Date().toISOString(), gameType: P.prefs.gameType || 'call' };
+    S.active = { scored: !!o.scored && !o.practice, practice: o.practice || null, run: null, level, mode, playset: ps, reps: [], at: new Date().toISOString(), gameType: P.prefs.gameType || 'call' };
     try { localStorage.setItem('pocketiq3d.gameType', S.active.gameType); } catch (e) {}
     applyCommon(mode, level);
     Q.setPoolFilter(ps && ps.startsWith('c:') ? (p) => p.name.replace(' (audible)', '') === ps.slice(2) : null);
@@ -232,9 +246,8 @@
   function endSession() { S.active = null; if (Q) Q.setPoolFilter(null); document.body.classList.remove('pi-immersive'); hud(); }
   function nextForced() {
     const a = S.active; if (!a || !a.practice) return undefined;
-    const pr = a.practice, pool = M.pool(a.mode).filter((p) => p.name.replace(' (audible)', '') === pr.concept);
-    if (pr.play !== 'random') return pool.find((p) => p.id === pr.play) || pool[0];
-    return pool[Math.floor(Math.random() * pool.length)];
+    if (!a.run) a.run = window.QBPractice.createRun(a.mode, a.practice.cfg); // fresh shuffle bags per session
+    return a.run.next();
   }
   function hud() {
     let d = $('pi-hud'); if (!d) { d = el('div'); d.id = 'pi-hud'; document.body.appendChild(d); }
@@ -418,23 +431,58 @@
   }
 
   // ---------- practice ----------
+  // v13: multi-select. Offense = Fully random (exact Free Play pool) or chosen plays (concept chips select whole concepts);
+  // Defense = chosen coverages (shuffle bag, only those) or each play's own look. Choices persist in prefs.practice.
   function showPractice() {
-    const mode = P.prefs.mode || M.getMode(), pool = M.pool(mode), names = [...new Set(pool.map((p) => p.name.replace(' (audible)', '')))];
-    let concept = names[0], playId = 'random';
+    const PR = window.QBPractice, mode = P.prefs.mode || M.getMode(), pool = PR.freePlayPool(mode);
+    const modeLbl = ((M.MODES || []).find((m) => m.id === mode) || { label: mode }).label;
+    let cfg = PR.normalize(P.prefs.practice), preview = false;
+    const names = [...new Set(pool.map(PR.concept))], fams = PR.families();
+    const persist = () => { P.prefs.practice = cfg; save(); };
+    const covName = (k) => (D.COVERAGES[k] || {}).name || k;
+    const tog = (arr, id, on) => (on ? [...new Set(arr.concat(id))] : arr.filter((x) => x !== id));
+    const opt = (attr, id, on, title, sub) => `<button class="pi-opt${on ? ' on' : ''}" ${attr}="${esc(id)}" aria-pressed="${on}"><i class="pi-box">${on ? '✓' : ''}</i><span><b>${esc(title)}</b>${sub ? `<em>${esc(sub)}</em>` : ''}</span></button>`;
     const render = () => {
-      const plays = pool.filter((p) => p.name.replace(' (audible)', '') === concept);
-      const cur = plays.find((p) => p.id === playId) || plays[0];
-      const sim = simFor(cur, null, cur.pressure, 3);
-      sheet('PRACTICE', `<div class="pi-small">Same concept, rep after rep. Pick a specific look or let the defense rotate through every look the concept is drawn against. Practice reps are unrated.</div>
-      <div class="pi-card"><div class="pi-lbl">Play</div><div class="pi-row" id="pi-pr-c">${names.map((n) => `<button class="pi-chip${n === concept ? ' on' : ''}" data-c="${esc(n)}">${esc(n)}</button>`).join('')}</div>
-      <div class="pi-lbl">Defense</div><div class="pi-row" id="pi-pr-d"><button class="pi-chip${playId === 'random' ? ' on' : ''}" data-p="random">🎲 Random (${plays.length} look${plays.length > 1 ? 's' : ''})</button>${plays.map((p) => `<button class="pi-chip${p.id === playId ? ' on' : ''}" data-p="${p.id}">${esc(p.type === 'run' ? (p.pressure || 'base') : (D.COVERAGES[p.coverage] || {}).name || p.coverage)}${p.pressure && p.pressure !== 'NONE' && p.type !== 'run' ? ' + ' + esc((D.BLITZES[p.pressure] || {}).label || p.pressure) : ''}</button>`).join('')}</div>
-      <div class="pi-lbl">Level</div><div class="pi-row">${LEVELS.map((l) => `<button class="pi-chip${P.level === l.id ? ' on' : ''}" data-lv="${l.id}" ${P.unlocked.includes(l.id) ? '' : 'disabled'}>${l.label}</button>`).join('')}</div></div>
-      <div class="pi-card">${diagram(sim, { routes: true })}<p class="pi-small">${esc(D.FORMATIONS[cur.formation].name)} · progression ${(cur.progression || []).join(' → ') || '—'}</p></div>
-      <div class="pi-row" style="justify-content:center"><button class="pi-play" id="pi-pr-go">▶ REP IT</button></div>`);
-      document.querySelectorAll('#pi-pr-c [data-c]').forEach((b) => (b.onclick = () => { concept = b.dataset.c; playId = 'random'; render(); }));
-      document.querySelectorAll('#pi-pr-d [data-p]').forEach((b) => (b.onclick = () => { playId = b.dataset.p; render(); }));
-      document.querySelectorAll('#pi-sheet [data-lv]').forEach((b) => (b.onclick = () => { P.level = b.dataset.lv; save(); render(); }));
-      $('pi-pr-go').onclick = () => startSession({ practice: { concept, play: playId } });
+      const sc = ($('pi-sheet') || {}).scrollTop || 0, v = PR.validate(mode, cfg), sel = new Set(cfg.plays), csel = new Set(cfg.covs);
+      const nIn = pool.filter((p) => sel.has(p.id)).length;
+      const conceptChip = (n) => { const ps = pool.filter((p) => PR.concept(p) === n), k = ps.filter((p) => sel.has(p.id)).length; return `<button class="pi-chip pi-tap${k === ps.length ? ' on' : k ? ' part' : ''}" data-cs="${esc(n)}" aria-pressed="${k === ps.length}">${esc(n)} <small>${k}/${ps.length}</small></button>`; };
+      const multi = names.filter((n) => pool.filter((p) => PR.concept(p) === n).length > 1), types = new Set(pool.map((p) => (p.type === 'run' ? 'run' : 'pass')));
+      const row = (p) => opt('data-play', p.id, sel.has(p.id), p.name, `${(D.FORMATIONS[p.formation] || {}).name || p.formation} · ${p.type === 'run' ? 'run' : 'pass'} · drawn vs ${covName(p.coverage)}${p.pressure && p.pressure !== 'NONE' ? ' + ' + ((D.BLITZES[p.pressure] || {}).label || p.pressure) : ''}`);
+      const off = cfg.offense === 'random' ? `<p class="pi-small">Every rep is drawn from the full ${esc(modeLbl)} playbook — the same ${pool.length} plays as Free Play, shuffled so each comes up before any repeats.</p>`
+        : `<div class="pi-bar"><button class="pi-chip pi-tap" id="pi-pr-pall">Select all</button><button class="pi-chip pi-tap" id="pi-pr-pnone">Select none</button>${types.size > 1 ? '<button class="pi-chip pi-tap" data-ty="pass">+ All passes</button><button class="pi-chip pi-tap" data-ty="run">+ All runs</button>' : ''}<span class="pi-small"><b>${nIn}</b> of ${pool.length} plays</span></div>
+        ${multi.length ? `<div class="pi-lbl">Concept sets <span class="pi-small" style="text-transform:none;letter-spacing:0">— tap to add/remove every version of a concept</span></div><div class="pi-row pi-cs" id="pi-pr-cs">${multi.map(conceptChip).join('')}</div>` : ''}
+        <div class="pi-lbl">Plays</div><div class="pi-optlist" id="pi-pr-pl">${names.map((n) => { const ps = pool.filter((p) => PR.concept(p) === n); return (ps.length > 1 ? `<div class="pi-grp">${esc(n)} · ${ps.length} versions</div>` : '') + ps.map(row).join(''); }).join('')}</div>`;
+      const def = cfg.defense === 'own' ? `<p class="pi-small">Each play keeps the look it was drawn against (Free Play behaviour), including its pressure.</p>`
+        : `<div class="pi-bar"><button class="pi-chip pi-tap" id="pi-pr-call">Select all</button><button class="pi-chip pi-tap" id="pi-pr-cnone">Select none</button><span class="pi-small"><b>${cfg.covs.length}</b> of ${PR.allCovs().length} coverages</span></div>
+        <div class="pi-optlist" id="pi-pr-cl">${fams.map((f) => `<button class="pi-grp pi-grpbtn" data-fam="${f.id}">${esc(f.label)} <small>${f.covs.filter((k) => csel.has(k)).length}/${f.covs.length} · tap to toggle all</small></button>` + f.covs.map((k) => opt('data-cov', k, csel.has(k), covName(k), '')).join('')).join('')}</div>
+        <p class="pi-small">Reps shuffle through only these coverages — each one shows up before any repeats. A play's blitz is kept only when it fits the look (an all-out zero blitz only with Cover 0); protection settings are unchanged.</p>`;
+      let prev = '';
+      if (preview && v.ok) { const s0 = PR.withLook(v.plays[0], v.covs ? v.covs[0] : null); prev = diagram(simFor(s0, null, s0.pressure, 3), { routes: true }) + `<p class="pi-small">${esc(s0.name)} vs ${esc(covName(s0.coverage))} — sample of the first selection</p>`; }
+      sheet('PRACTICE', `<div class="pi-small">Build your rep list: choose the plays and the coverages you want to see. Reps shuffle among only what you select. Practice reps are unrated.</div>
+      <div class="pi-card pi-prac"><div class="pi-lbl">Offense · ${esc(modeLbl)} playbook</div>
+        <div class="pi-seg" id="pi-pr-om"><button class="pi-chip pi-tap${cfg.offense === 'random' ? ' on' : ''}" data-om="random">🎲 Fully random</button><button class="pi-chip pi-tap${cfg.offense === 'pick' ? ' on' : ''}" data-om="pick">☑ Choose plays</button></div>${off}</div>
+      <div class="pi-card pi-prac"><div class="pi-lbl">Defense</div>
+        <div class="pi-seg" id="pi-pr-dm"><button class="pi-chip pi-tap${cfg.defense === 'pick' ? ' on' : ''}" data-dm="pick">☑ Choose coverages</button><button class="pi-chip pi-tap${cfg.defense === 'own' ? ' on' : ''}" data-dm="own">Each play's own look</button></div>${def}</div>
+      <div class="pi-card pi-prac"><div class="pi-lbl">Level</div><div class="pi-row">${LEVELS.map((l) => `<button class="pi-chip pi-tap${P.level === l.id ? ' on' : ''}" data-lv="${l.id}" ${P.unlocked.includes(l.id) ? '' : 'disabled'}>${l.label}</button>`).join('')}</div>
+        <details id="pi-pr-prev"${preview ? ' open' : ''}><summary class="pi-small">Preview a sample rep</summary>${prev}</details></div>
+      <div class="pi-gobar"><div id="pi-pr-err" class="${v.ok ? 'pi-small' : 'pi-bad'}" role="status">${v.ok ? esc(PR.label(mode, cfg)) : v.errors.map(esc).join('<br>')}</div><button class="pi-play" id="pi-pr-go" ${v.ok ? '' : 'disabled'}>▶ REP IT</button></div>`);
+      const s = $('pi-sheet'); if (s) s.scrollTop = sc;
+      const up = (f) => () => { f(); persist(); render(); }, q = (x) => document.querySelectorAll('#pi-sheet ' + x);
+      q('[data-om]').forEach((b) => (b.onclick = up(() => (cfg.offense = b.dataset.om))));
+      q('[data-dm]').forEach((b) => (b.onclick = up(() => (cfg.defense = b.dataset.dm))));
+      q('[data-play]').forEach((b) => (b.onclick = up(() => (cfg.plays = tog(cfg.plays, b.dataset.play, !sel.has(b.dataset.play))))));
+      q('[data-cs]').forEach((b) => (b.onclick = up(() => { const ids = pool.filter((p) => PR.concept(p) === b.dataset.cs).map((p) => p.id), all = ids.every((id) => sel.has(id)); cfg.plays = all ? cfg.plays.filter((x) => !ids.includes(x)) : [...new Set(cfg.plays.concat(ids))]; })));
+      q('[data-ty]').forEach((b) => (b.onclick = up(() => (cfg.plays = [...new Set(cfg.plays.concat(pool.filter((p) => (p.type === 'run' ? 'run' : 'pass') === b.dataset.ty).map((p) => p.id)))]))));
+      q('[data-cov]').forEach((b) => (b.onclick = up(() => (cfg.covs = tog(cfg.covs, b.dataset.cov, !csel.has(b.dataset.cov))))));
+      q('[data-fam]').forEach((b) => (b.onclick = up(() => { const ks = fams.find((f) => f.id === b.dataset.fam).covs, all = ks.every((k) => csel.has(k)); cfg.covs = all ? cfg.covs.filter((k) => !ks.includes(k)) : [...new Set(cfg.covs.concat(ks))]; })));
+      const bt = (id, f) => { const b = $(id); if (b) b.onclick = up(f); };
+      bt('pi-pr-pall', () => (cfg.plays = [...new Set(cfg.plays.concat(pool.map((p) => p.id)))]));
+      bt('pi-pr-pnone', () => (cfg.plays = cfg.plays.filter((id) => !pool.some((p) => p.id === id))));
+      bt('pi-pr-call', () => (cfg.covs = PR.allCovs()));
+      bt('pi-pr-cnone', () => (cfg.covs = []));
+      q('[data-lv]').forEach((b) => (b.onclick = () => { P.level = b.dataset.lv; save(); render(); }));
+      $('pi-pr-prev').ontoggle = (e) => { if (e.target.open !== preview) { preview = e.target.open; render(); } };
+      $('pi-pr-go').onclick = () => { if (PR.validate(mode, cfg).ok) startSession({ practice: { cfg: PR.normalize(cfg), concept: PR.label(mode, cfg) } }); };
     };
     render();
   }

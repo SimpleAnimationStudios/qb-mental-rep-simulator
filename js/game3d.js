@@ -517,7 +517,7 @@ const state = {
   mode: M.getMode(), orig: null, audible: null, prot: null, seed: 1, custom: null,
 };
 $('difficulty').value = state.diff;
-$('difficulty').onchange = (e) => { state.diff = e.target.value; localStorage.setItem('pocketiq3d.diff', state.diff); nextPlay(); };
+$('difficulty').onchange = (e) => { state.diff = e.target.value; localStorage.setItem('pocketiq3d.diff', state.diff); nextPlay(window.PocketHub && window.PocketHub.nextForced ? window.PocketHub.nextForced() : undefined); };
 
 const SHORT = { C0: 'Cov 0', C1: 'Cov 1', C2: 'Cov 2', C3: 'Cov 3', C4: 'Cov 4', none: 'None', left: 'Blitz L', middle: 'A-gap', right: 'Blitz R' };
 function buildChoices(elId, options, key) {

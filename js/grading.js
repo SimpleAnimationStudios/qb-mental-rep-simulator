@@ -27,14 +27,14 @@
     if (!correct) { correct = play.correct; ideal = play.idealTime; }
     const free = sim.prot ? sim.prot.free.filter((r) => r.arrive < (ideal || 2) + 0.15) : [];
     // Hot always wins when a free rusher beats the window; otherwise table stands; probe fills gaps / custom plays.
-    if (free.length || !correct || play.probed || play.custom) {
+    if (free.length || !correct || play.probed || play.custom || play.lookProbe) {
       const b = E.bestRead(play, sim.opts, free.length ? free[0].arrive - 0.25 : undefined);
       if (b.pick) {
         if (free.length) {
           hot = true;
           if (b.pick.id !== correct) why = `${who(sim, free[0].rusher)} was unblocked and home at ${free[0].arrive.toFixed(1)}s — the hot answer is ${b.pick.id} at ${b.pick.t.toFixed(1)}s`;
           correct = b.pick.id; ideal = Math.min(b.pick.t, (ideal || 9)); source = 'hot';
-        } else if (!correct || play.custom) {
+        } else if (!correct || play.custom || play.lookProbe) { // lookProbe: Practice re-skinned a non-table concept's look
           correct = b.pick.id; ideal = b.pick.t; source = 'probe'; why = why || 'probe fallback';
         }
       }
