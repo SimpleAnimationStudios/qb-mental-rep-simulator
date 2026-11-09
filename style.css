@@ -283,3 +283,12 @@ button.tiny{padding:2px 6px;font-size:11px}
 #presnap.just-read #b-cov,#presnap.just-read #b-prot,#presnap.just-read #b-aud{display:none!important}
 #presnap.just-read .pop{display:none!important}
 #presnap.just-read.bubbles{justify-content:center}
+/* PWA: keep edge controls clear of the notch / home indicator in installed (standalone) landscape.
+   Each max() keeps the existing value, so layouts without safe-area insets (desktop, most browsers) are unchanged. */
+header#hud-top{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+#routes-btn{right:max(16px,calc(env(safe-area-inset-right) + 8px));bottom:max(10px,env(safe-area-inset-bottom))}
+@media (max-height:500px){
+  header#hud-top{padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right))}
+  #routes-btn{right:max(10px,calc(env(safe-area-inset-right) + 6px));bottom:max(6px,env(safe-area-inset-bottom))}
+  #presnap.bubbles{right:max(84px,calc(env(safe-area-inset-right) + 80px));bottom:max(6px,env(safe-area-inset-bottom))}
+}

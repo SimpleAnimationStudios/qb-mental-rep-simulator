@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<defs>
+  <radialGradient id="bg" cx="50%" cy="42%" r="75%"><stop offset="0" stop-color="#0f2233"/><stop offset=".6" stop-color="#08111b"/><stop offset="1" stop-color="#05080d"/></radialGradient>
+  <linearGradient id="turf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3ee08f" stop-opacity=".0"/><stop offset="1" stop-color="#3ee08f" stop-opacity=".16"/></linearGradient>
+  <filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5.04" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="512" height="512" fill="url(#bg)"/>
+<rect y="300" width="512" height="212" fill="url(#turf)"/>
+<g stroke="#3ee08f" stroke-opacity=".18" stroke-width="3"><line x1="96" y1="330" x2="40" y2="512"/><line x1="176" y1="330" x2="148" y2="512"/><line x1="256" y1="330" x2="256" y2="512"/><line x1="336" y1="330" x2="364" y2="512"/><line x1="416" y1="330" x2="472" y2="512"/></g>
+<g transform="translate(256 199.84) scale(0.72) rotate(-28)" filter="url(#glow)">
+  <ellipse rx="128" ry="74" fill="#0b1520" stroke="#3ee08f" stroke-width="14"/>
+  <line x1="-46" y1="0" x2="46" y2="0" stroke="#e8eef5" stroke-width="9" stroke-linecap="round"/>
+  <line x1="-30" y1="-14" x2="-30" y2="14" stroke="#e8eef5" stroke-width="8" stroke-linecap="round"/><line x1="-10" y1="-14" x2="-10" y2="14" stroke="#e8eef5" stroke-width="8" stroke-linecap="round"/><line x1="10" y1="-14" x2="10" y2="14" stroke="#e8eef5" stroke-width="8" stroke-linecap="round"/><line x1="30" y1="-14" x2="30" y2="14" stroke="#e8eef5" stroke-width="8" stroke-linecap="round"/>
+  <path d="M-92 -38 Q-104 0 -92 38 M92 -38 Q104 0 92 38" fill="none" stroke="#3ee08f" stroke-opacity=".55" stroke-width="7" stroke-linecap="round"/>
+</g>
+<g transform="translate(256 307.84) scale(0.72)" font-family="DejaVu Sans, Arial, Helvetica, sans-serif" font-weight="800" text-anchor="middle">
+  <text y="0" font-size="50" letter-spacing="8" fill="#e8eef5">POCKET</text>
+  <text y="98" font-size="100" fill="#3ee08f" letter-spacing="4">IQ</text>
+</g>
+</svg>

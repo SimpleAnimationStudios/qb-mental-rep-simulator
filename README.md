@@ -427,3 +427,42 @@ Tests: `node tests/playwright-v8.cjs` produces the screenshots `screenshots/v8-*
 - **Menu.** Hero → Game type → Mode/Level → Session/Stadium → tiles. Screenshots: `screenshots/v12-menu-*.png`.
 - **Tests.** `v12-reads`, `v12-overlay`, `playwright-v12-modes`, `playwright-v12-overlay`.
 
+
+## Install on a phone (PWA)
+Pocket IQ is an **installable web app (PWA)**, not a native App Store / Play Store binary. There is still no build step: the
+files in this folder are what gets served.
+
+**What's included**
+- `manifest.json`: name, `short_name` "Pocket IQ", `display: standalone`, `orientation: landscape`, dark theme/background (`#05080d`),
+  and relative `start_url`/`scope` (`./`), so the app works at a domain root or in any sub-folder.
+- `icons/`: 192 and 512 PNG icons, maskable 192/512 versions (artwork inside the safe circle), a 180×180 Apple touch icon,
+  and the SVG sources. Regenerate them with `node tools/make-icons.cjs` (artwork in `tools/icon.svg.js`).
+- `sw.js`: a service worker that precaches every runtime file (HTML, CSS, scripts, ES modules, the analysis worker and its
+  `importScripts`, vendored Three.js, manifest, icons) into one versioned cache, so after the **first online visit** the game runs fully offline.
+- `pwa.js`: registers the service worker, but only in a secure context (HTTPS, or `http://localhost` for testing). Elsewhere the game still runs online, just not offline or installable.
+- `index.html`: manifest link, Apple touch icon, `apple-mobile-web-app-capable`, status-bar style, `theme-color`, and `viewport-fit=cover`.
+  `style.css` keeps edge controls clear of the notch and home indicator using the safe-area insets.
+
+**Hosting requirement.** Installing and offline use need the folder to be served over **HTTPS** (or from localhost). A private
+GitHub repository doesn't give you an install URL: github.com repository, blob and raw links don't work. You need to deploy the folder to a
+static HTTPS host. If the game should stay private, that host needs real sign-in protection; an unlisted link is not private.
+
+**Install**
+- iPhone/iPad (Safari): open the HTTPS URL, tap **Share**, then **Add to Home Screen**, then **Add**. Open it from the new icon.
+- Android (Chrome): open the HTTPS URL, then tap **Install app** in the prompt or the ⋮ menu (on some versions it's **Add to Home screen**, then **Install**).
+
+**Notes / limits.** Standalone mode hides the browser UI, but it's not guaranteed to be full-screen on every device. iOS
+ignores the manifest's landscape preference, so rotate the phone (and turn off rotation lock). Offline only works on a device that has
+already opened the app once online. Nothing is cached at runtime beyond the fixed shell list: no cross-origin responses, no
+login or API responses. Saved progress stays in the browser's `localStorage` for that installed app.
+
+**Updates.** Bump `VERSION` in `sw.js` whenever a shipped file changes. Installed copies download the new version in the
+background and show an **Update ready · Reload** button. The game never reloads mid-rep by itself, and saved progress is kept.
+The service worker only deletes its own old `pocketiq3d-shell-*` caches.
+
+**PWA tests**
+```
+node tests/pwa-check.cjs          # manifest, icon sizes, relative paths, precache covers every runtime file, node --check
+node tests/playwright-pwa.cjs     # Chromium: root + nested sub-path, SW scope/cache, OFFLINE reload + full rep + worker,
+                                  # Chrome installability (no errors), update flow; starts its own servers on 8766-8768
+```
