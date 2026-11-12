@@ -28,7 +28,6 @@ button:disabled{opacity:.4}
 #clock{overflow:visible}
 .panel{position:fixed;background:#08111bea;border:1px solid #ffffff1c;border-radius:14px;padding:12px;box-shadow:0 10px 30px #0008}
 .ph{display:flex;justify-content:space-between;align-items:center;font-weight:800;letter-spacing:1px;margin-bottom:6px}
-#presnap-timer{color:#ffd23f;font-variant-numeric:tabular-nums}
 .lbl{font-size:11px;opacity:.7;margin:6px 0 4px;text-transform:uppercase;letter-spacing:1px}
 .choices{display:flex;flex-wrap:wrap;gap:5px}
 .choice{padding:6px 8px;font-size:12px}
@@ -69,7 +68,6 @@ button:disabled{opacity:.4}
 #presnap .choice.selected{background:#ffd23fdd}
 #presnap .go{gap:8px}
 #presnap #snap-btn{width:auto;margin:0;padding:7px 14px}
-#presnap #presnap-timer{color:#ffd23f;font-weight:800;font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
 #presnap.collapsed .grp:not(.go){display:none}
 button.tiny{padding:2px 6px;font-size:11px}
 #presnap.collapsed #ps-collapse{transform:rotate(180deg)}
@@ -115,7 +113,7 @@ button.tiny{padding:2px 6px;font-size:11px}
 @media (min-width:1181px) and (min-height:501px){ #presnap.dock{max-width:calc(100vw - 110px);flex-wrap:nowrap} }
 @media (max-width:1180px) and (min-height:501px){ #presnap.dock{flex-wrap:wrap;justify-content:center;row-gap:4px} }
 @media (max-height:500px){ #presnap.dock{width:150px} #presnap .choice.var{flex:1 1 46%} #presnap .go{flex-wrap:wrap} #presnap .qt{flex:1} }
-@media (max-height:500px){ #presnap.dock{gap:3px;padding:5px} #presnap .choice{padding:3px 4px;font-size:11px;min-height:0} #presnap .lbl{font-size:9px;margin:0;line-height:1.1} #presnap #presnap-timer{font-size:11px;width:100%;text-align:center} #presnap .grp{gap:3px} }
+@media (max-height:500px){ #presnap.dock{gap:3px;padding:5px} #presnap .choice{padding:3px 4px;font-size:11px;min-height:0} #presnap .lbl{font-size:9px;margin:0;line-height:1.1} #presnap .grp{gap:3px} }
 
 /* ---- v4: modes, pressure variants, protection, audibles, menu, designer, taunt ---- */
 #mode-tag{font-size:10px;letter-spacing:1px;color:#ffd23f;font-weight:700;margin-left:4px}

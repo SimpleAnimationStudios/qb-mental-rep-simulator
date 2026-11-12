@@ -16,7 +16,7 @@ let fails = 0; const ok = (n, c, x = '') => { console.log((c ? 'PASS ' : 'FAIL '
   await shot('v8-home');
   await p.click('[data-lv="youth"]'); await p.click('#pi-play');
   ok('session starts, home hidden, HUD chip', await Q(() => document.getElementById('pi-home').hidden && /rep 1\/10/.test(document.getElementById('pi-hud').textContent)));
-  ok('level applied (youth → 15 s, 1.45× pocket)', await Q(() => window.__qb3d.state.diff === 'youth' && window.__qb3d.DIFF.youth.presnap === 15));
+  ok('level applied (youth → 1.45× pocket, no pre-snap clock)', await Q(() => window.__qb3d.state.diff === 'youth' && window.__qb3d.DIFF.youth.pocketMul === 1.45 && window.__qb3d.DIFF.youth.presnap === undefined));
   for (let i = 0; i < 10; i++) {
     await p.waitForFunction(() => window.__qb3d.state.sim && window.__qb3d.state.sim.phase === 'presnap', null, { timeout: 8000 });
     await Q(() => { const q = window.__qb3d, s = q.state.sim; const c = q.D.COVERAGES[s.play.coverage]; document.querySelector(`#cov-choices [data-id="${c.shell}"]`)?.click(); q.doSnap(); window.__timeScale = 3; });
@@ -58,7 +58,9 @@ let fails = 0; const ok = (n, c, x = '') => { console.log((c ? 'PASS ' : 'FAIL '
   await shot('v8-coach-cards');
   // Practice
   await Q(() => window.PocketHub.showPractice()); await p.waitForSelector('#pi-pr-go');
-  await p.click('#pi-pr-c [data-c="Smash"]'); await p.click('#pi-pr-d [data-p="smash_c4"]');
+  // v13 practice builder: choose one play, keep its own look
+  await p.click('[data-om="pick"]'); await p.click('#pi-pr-pnone'); await p.click('[data-dm="own"]');
+  await p.$eval('[data-play="smash_c4"]', (e) => e.click());
   await shot('v8-practice');
   await p.click('#pi-pr-go');
   const ids = [];

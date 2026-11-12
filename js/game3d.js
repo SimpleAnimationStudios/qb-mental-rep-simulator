@@ -10,10 +10,10 @@ const D = window.QBData, E = window.QBEngine, M = window.QBModes, G = window.QBG
 const $ = (id) => document.getElementById(id);
 const HISTORY_KEY = 'pocketiq3d.history.v2'; // v1 is migrated by QBModes.loadHistory (left untouched)
 const DIFF = {
-  youth:   { label: 'Youth',   presnap: 15, pocketMul: 1.45, disguise: 0,    timingSlack: 0.75, intMul: 0.45, react: 0.5, disc: 0.55 }, // v8 level
-  rookie:  { label: 'High School',  presnap: 12, pocketMul: 1.3,  disguise: 0,    timingSlack: 0.6, intMul: 0.6, react: 0.4, disc: 0.7 },
-  starter: { label: 'College', presnap: 8,  pocketMul: 1.0,  disguise: 0.4,  timingSlack: 0.4, intMul: 1.0, react: 0.3, disc: 0.82 },
-  pro:     { label: 'Pro',     presnap: 5,  pocketMul: 0.85, disguise: 0.85, timingSlack: 0.25, intMul: 1.4, react: 0.2, disc: 0.95 },
+  youth:   { label: 'Youth',   pocketMul: 1.45, disguise: 0,    timingSlack: 0.75, intMul: 0.45, react: 0.5, disc: 0.55 }, // v8 level
+  rookie:  { label: 'High School',  pocketMul: 1.3,  disguise: 0,    timingSlack: 0.6, intMul: 0.6, react: 0.4, disc: 0.7 },
+  starter: { label: 'College', pocketMul: 1.0,  disguise: 0.4,  timingSlack: 0.4, intMul: 1.0, react: 0.3, disc: 0.82 },
+  pro:     { label: 'Pro',     pocketMul: 0.85, disguise: 0.85, timingSlack: 0.25, intMul: 1.4, react: 0.2, disc: 0.95 },
 };
 const TEAM_O = { jersey: 0x1d4ed8, pants: 0xe5e7eb, helmet: 0x0f2a6b, num: '#ffffff', numOutline: '#0b1f5c', stripe: 0xf8fafc, sock: 0x1d4ed8, mask: 0xd1d5db, decal: 0xf8fafc, glove: 0xf3f4f6, belt: 0x0f172a };
 const TEAM_D = { jersey: 0xb91c1c, pants: 0x111827, helmet: 0xd1d5db, num: '#ffffff', numOutline: '#3f0b0b', stripe: 0xb91c1c, sock: 0xb91c1c, mask: 0x1f2937, decal: 0xb91c1c, glove: 0x111111, belt: 0x0b0b0b };
@@ -288,6 +288,8 @@ const routeLines = [];
 const rcv = document.createElement('canvas'); rcv.id = 'route-cv'; document.body.appendChild(rcv); const rctx = rcv.getContext('2d');
 const _rv = new THREE.Vector3(), _rw = new THREE.Vector3();
 function drawRouteOverlay() {
+  // v14: playbook-style art — fixed pixel width at any camera distance, dark outline + faint halo, crisp mitred breaks,
+  // arrowheads (T bars for blocks) sized in pixels. Geometry comes from js/routeart.js (authored waypoints).
   const on = routeGroup.visible && routeLines.length;
   if (!on) { if (rcv._on) { rctx.clearRect(0, 0, rcv.width, rcv.height); rcv._on = false; rcv.style.display = 'none'; } return; }
   const w = window.innerWidth, h = window.innerHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -295,7 +297,7 @@ function drawRouteOverlay() {
   rcv.style.display = ''; rcv._on = true; rctx.setTransform(dpr, 0, 0, dpr, 0, 0); rctx.clearRect(0, 0, w, h);
   camera.updateMatrixWorld(); const inv = camera.matrixWorldInverse, P = camera.projectionMatrix;
   const scr = (v) => { _rw.copy(v).applyMatrix4(P); return { x: (_rw.x + 1) / 2 * w, y: (1 - _rw.y) / 2 * h }; };
-  const lw = Math.max(5, Math.min(9, h / 110));
+  const lw = Math.max(3.6, Math.min(5.5, Math.min(w, h * 1.2) / 150)), A = lw * 2.7;
   routeLines.forEach((R) => {
     const path = []; let prev = null;
     for (let i = 0; i < R.pts.length; i++) { // view space, clipped at the near plane
@@ -303,23 +305,31 @@ function drawRouteOverlay() {
       if (prev && (prev.z < -0.2) !== (cur.z < -0.2)) { const k = (-0.2 - prev.z) / (cur.z - prev.z); const c = prev.clone().lerp(cur, k); path.push(c.z < -0.19 ? scr(c) : null); }
       path.push(cur.z < -0.2 ? scr(cur) : null); prev = cur;
     }
+    const last = path[path.length - 1]; let pen = null;
+    for (let i = path.length - 2; i >= 0 && path[i]; i--) if (Math.hypot(path[i].x - last.x, path[i].y - last.y) > 2) { pen = path[i]; break; }
+    let dx = 0, dy = 0; if (last && pen) { dx = last.x - pen.x; dy = last.y - pen.y; const m = Math.hypot(dx, dy) || 1; dx /= m; dy /= m; }
+    const tip = R.end === 'arrow' && last && pen ? { x: last.x - dx * A * 0.75, y: last.y - dy * A * 0.75 } : null; // line stops at the arrow's base
     const segs = []; let sg = [];
-    path.forEach((q) => { if (q) sg.push(q); else if (sg.length) { segs.push(sg); sg = []; } }); if (sg.length) segs.push(sg);
+    path.forEach((q, i) => { if (q) sg.push(i === path.length - 1 && tip ? tip : q); else if (sg.length) { segs.push(sg); sg = []; } }); if (sg.length) segs.push(sg);
+    rctx.lineJoin = 'miter'; rctx.miterLimit = 3;
     segs.forEach((pts) => {
       if (pts.length < 2) return;
-      rctx.lineJoin = rctx.lineCap = 'round';
       rctx.beginPath(); pts.forEach((q, i) => (i ? rctx.lineTo(q.x, q.y) : rctx.moveTo(q.x, q.y)));
-      rctx.strokeStyle = 'rgba(0,0,0,.75)'; rctx.lineWidth = lw + 4; rctx.stroke();
-      rctx.strokeStyle = R.col; rctx.globalAlpha = 0.35; rctx.lineWidth = lw + 10; rctx.stroke(); rctx.globalAlpha = 1;
+      rctx.lineCap = 'round'; rctx.strokeStyle = R.col; rctx.globalAlpha = 0.18; rctx.lineWidth = lw + 7; rctx.stroke(); rctx.globalAlpha = 1;
+      rctx.lineCap = 'butt'; rctx.strokeStyle = 'rgba(4,8,16,.82)'; rctx.lineWidth = lw + 3.5; rctx.stroke();
       rctx.strokeStyle = R.col; rctx.lineWidth = lw; rctx.stroke();
     });
-    const last = path[path.length - 1], pen = path[path.length - 2];
-    if (last && pen) { // arrowhead (fixed pixel size)
-      let dx = last.x - pen.x, dy = last.y - pen.y; const m = Math.hypot(dx, dy) || 1; dx /= m; dy /= m; const A = lw * 2.6;
-      rctx.beginPath(); rctx.moveTo(last.x + dx * A * 0.6, last.y + dy * A * 0.6); rctx.lineTo(last.x - dx * A * 0.6 - dy * A * 0.6, last.y - dy * A * 0.6 + dx * A * 0.6); rctx.lineTo(last.x - dx * A * 0.6 + dy * A * 0.6, last.y - dy * A * 0.6 - dx * A * 0.6); rctx.closePath();
-      rctx.fillStyle = R.col; rctx.strokeStyle = 'rgba(0,0,0,.8)'; rctx.lineWidth = 2; rctx.fill(); rctx.stroke();
-      if (R.lbl) { rctx.font = `900 ${Math.round(lw * 2)}px system-ui,sans-serif`; rctx.textAlign = 'center'; rctx.textBaseline = 'middle'; const tx = last.x + dx * A * 1.6, ty = last.y + dy * A * 1.6 - 2; rctx.lineWidth = 4; rctx.strokeStyle = '#000'; rctx.strokeText(R.lbl, tx, ty); rctx.fillStyle = '#fff'; rctx.fillText(R.lbl, tx, ty); }
+    if (!last || !pen) return;
+    rctx.lineJoin = 'miter';
+    if (R.end === 'tbar') {
+      const T = lw * 2.2; rctx.beginPath(); rctx.moveTo(last.x - dy * T, last.y + dx * T); rctx.lineTo(last.x + dy * T, last.y - dx * T);
+      rctx.lineCap = 'butt'; rctx.strokeStyle = 'rgba(4,8,16,.82)'; rctx.lineWidth = lw + 3.5; rctx.stroke(); rctx.strokeStyle = R.col; rctx.lineWidth = lw; rctx.stroke();
+    } else {
+      const bx = last.x - dx * A, by = last.y - dy * A, s = A * 0.55;
+      rctx.beginPath(); rctx.moveTo(last.x, last.y); rctx.lineTo(bx - dy * s, by + dx * s); rctx.lineTo(bx + dy * s, by - dx * s); rctx.closePath();
+      rctx.fillStyle = R.col; rctx.strokeStyle = 'rgba(4,8,16,.85)'; rctx.lineWidth = 1.75; rctx.fill(); rctx.stroke();
     }
+    if (R.lbl) { rctx.font = `900 ${Math.round(lw * 2.6)}px system-ui,sans-serif`; rctx.textAlign = 'center'; rctx.textBaseline = 'middle'; const tx = last.x + dx * A * 1.1, ty = last.y + dy * A * 1.1 - 2; rctx.lineJoin = 'round'; rctx.lineWidth = 4; rctx.strokeStyle = '#000'; rctx.strokeText(R.lbl, tx, ty); rctx.fillStyle = '#fff'; rctx.fillText(R.lbl, tx, ty); }
   });
 }
 const READ_COLORS = [0x3ee08f, 0xffd23f, 0x4fb3ff, 0xff7ad9];
@@ -337,26 +347,14 @@ function ribbon(pts, w, mat) {
   return new THREE.Mesh(g, mat);
 }
 function buildRoutes(sim) {
+  // v14: no field meshes any more (the ribbons z-fought / doubled the canvas art); routeGroup only carries the visible flag.
   while (routeGroup.children.length) disposeTree(routeGroup.children.pop());
   routeLines.length = 0;
+  const RA = window.QBRouteArt;
   sim.offense.forEach((p) => {
-    const col = readColor(sim, p), pts = [];
-    let prev = null;
-    for (let t = 0; t <= 4.2; t += 0.05) { const q = p.posAt(t); const v = { x: W(q.x), z: Z(q.y) }; if (!prev || Math.hypot(v.x - prev.x, v.z - prev.z) > 0.25) { pts.push(v); prev = v; } }
-    if (pts.length < 2) return;
-    routeLines.push({ pts: pts.map((v) => new THREE.Vector3(v.x, 0.15, v.z)), col: '#' + col.toString(16).padStart(6, '0'), read: p.read, lbl: p.read < 0 ? '' : p.read === sim.play.progression.length - 1 ? 'CD' : String(p.read + 1), id: p.id });
-    const glow = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.4, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
-    const core = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 1, depthWrite: false, depthTest: false, side: THREE.DoubleSide });
-    const rg = ribbon(pts, 1.5, glow), rc = ribbon(pts, 0.45, core); rg.renderOrder = 5; rc.renderOrder = 6; routeGroup.add(rg, rc);
-    // arrow head
-    const a = pts[pts.length - 2], b = pts[pts.length - 1], ang = Math.atan2(b.x - a.x, b.z - a.z);
-    const tri = new THREE.Shape(); tri.moveTo(0, 0.9); tri.lineTo(-0.6, -0.4); tri.lineTo(0.6, -0.4); tri.lineTo(0, 0.9);
-    const head = new THREE.Mesh(new THREE.ShapeGeometry(tri), core); head.renderOrder = 6; head.scale.setScalar(1.4);
-    head.rotation.set(-Math.PI / 2, 0, ang + Math.PI); head.position.set(b.x, 0.07, b.z);
-    // ShapeGeometry lies in XY; after -90° X rotation +Y points to -Z, so rotate about world Y via parent
-    const holder = new THREE.Group(); head.rotation.set(-Math.PI / 2, 0, 0); head.position.set(0, 0.07, 0); holder.add(head);
-    holder.position.set(b.x, 0, b.z); holder.rotation.y = Math.atan2(-(b.x - a.x), -(b.z - a.z)); routeGroup.add(holder);
-    holder.geometry = { dispose() {} };
+    const art = RA ? RA.art(p) : null; if (!art) return;
+    const col = readColor(sim, p);
+    routeLines.push({ pts: art.pts.map((q) => new THREE.Vector3(W(q.x), 0.15, Z(q.y))), end: art.end, curved: art.curved, source: art.source, col: '#' + col.toString(16).padStart(6, '0'), read: p.read, lbl: p.read < 0 ? '' : p.read === sim.play.progression.length - 1 ? 'CD' : String(p.read + 1), id: p.id });
   });
 }
 const routesAllowed = () => !(state.diff === 'pro' && localStorage.getItem('pocketiq3d.routesAtPro') === 'off');
@@ -511,7 +509,7 @@ function drawProtection(sim, group) {
 // ---------------- state ----------------
 const state = {
   diff: localStorage.getItem('pocketiq3d.diff') || 'starter',
-  sim: null, answers: {}, presnapLeft: 0, order: [], view: 'qb',
+  sim: null, answers: {}, order: [], view: 'qb',
   yaw: 0, yawTarget: 0, shake: 0, acc: 0, prev: new Map(),
   rec: [], replay: null, graded: false, dd: null, session: { reps: 0, streak: 0 },
   mode: M.getMode(), orig: null, audible: null, prot: null, seed: 1, custom: null,
@@ -531,7 +529,8 @@ function buildChoices(elId, options, key) {
 // ---- coverage picker: family chips, then variant chips (detailed calls) ----
 const VAR = Object.fromEntries(D.VARIANTS.map((v) => [v.id, v]));
 const detailedOn = () => { const v = localStorage.getItem('pocketiq3d.detailed'); return v ? v === 'on' : state.diff !== 'rookie' && state.diff !== 'youth'; };
-const unlimitedOn = () => localStorage.getItem('pocketiq3d.unlimited') === 'on';
+// v14: pre-snap time is always unlimited (no timer, no auto-snap, no toggle). The old v3 setting is ignored and cleared.
+try { localStorage.removeItem('pocketiq3d.unlimited'); } catch (e) {}
 const gameType = () => localStorage.getItem('pocketiq3d.gameType') === 'read' ? 'read' : 'call'; // v12: 'call' = predict, 'read' = just throw
 window.__gameType = gameType;
 window.__setGameType = (t) => { localStorage.setItem('pocketiq3d.gameType', t === 'read' ? 'read' : 'call'); };
@@ -566,17 +565,13 @@ function buildCoveragePicker() {
 buildCoveragePicker();
 // v11: Front picker removed from Coverage bubble (fronts still drive alignment via state.front)
 function syncToggles() {
-  $('opt-unlimited').checked = unlimitedOn(); $('opt-detailed').checked = detailedOn();
-  $('q-unl').classList.toggle('on', unlimitedOn()); $('q-det').classList.toggle('on', detailedOn());
+  $('opt-detailed').checked = detailedOn();
+  $('q-det').classList.toggle('on', detailedOn());
   if (state.renderVariants) state.renderVariants();
   if (state.renderPVar) state.renderPVar();
-  if (state.sim && state.sim.phase === 'presnap' && unlimitedOn()) setText(timerEl, 'Unlimited');
 }
-const setUnl = (v) => { localStorage.setItem('pocketiq3d.unlimited', v ? 'on' : 'off'); if (!v && state.sim) state.presnapLeft = DIFF[state.diff].presnap; syncToggles(); };
 const setDet = (v) => { localStorage.setItem('pocketiq3d.detailed', v ? 'on' : 'off'); syncToggles(); };
-$('opt-unlimited').onchange = (e) => setUnl(e.target.checked);
 $('opt-detailed').onchange = (e) => setDet(e.target.checked);
-$('q-unl').onclick = () => setUnl(!unlimitedOn());
 $('q-det').onclick = () => setDet(!detailedOn());
 $('opt-detailed-auto').onclick = () => { localStorage.removeItem('pocketiq3d.detailed'); syncToggles(); };
 // ---- pressure picker: family chips, then blitz variant chips (family-only quick mode when detail is off / Rookie) ----
@@ -702,7 +697,7 @@ function nextPlay(forced) {
   const cfg = DIFF[state.diff];
   state.orig = play; state.audRep = (state.audRep || 0) + 1; state.audMenu = M.audibleTree(play, state.mode, state.audRep, (state.audMenu || []).map((x) => x.id)); state.audible = null; state.custom = forced && forced.custom ? forced : null; state.protTouched = false; state.audAnswered = false;
   state.prot = play.protection || 'BOB'; state.seed = 1 + Math.floor(Math.random() * 1e9); state.front = (forced && forced.front) || play.front || (window.QBDefense ? window.QBDefense.pick(play, state.seed) : null);
-  state.answers = {}; setTimeout(syncToggles, 0); state.presnapLeft = cfg.presnap; state.graded = false; state.autoReplayed = false; state.replay = null; state.intT = null; state.celebrate = null; state.intPending = null; state.postT = null; POSTP.plan = null; resetTrail(); { const c = $('caption'); if (c) c.hidden = true; }
+  state.answers = {}; setTimeout(syncToggles, 0); state.graded = false; state.autoReplayed = false; state.replay = null; state.intT = null; state.celebrate = null; state.intPending = null; state.postT = null; POSTP.plan = null; resetTrail(); { const c = $('caption'); if (c) c.hidden = true; }
   $('banner').hidden = true; $('taunt').hidden = true; $('prot-chip').hidden = true; setRoutes(false); state.rec = []; state.acc = 0;
   state.gradeWait = null; clearTimeout(state.gradeWD); state.pre = null;
   rebuildSim();
@@ -762,7 +757,7 @@ function setPhase(t) { $('phase').textContent = t; }
 const domCache = new Map();
 function setText(el, v) { if (domCache.get(el) !== v) { domCache.set(el, v); el.textContent = v; } }
 function setStyle(el, k, v) { const key = el.id + ':' + k; if (domCache.get(key) !== v) { domCache.set(key, v); el.style[k] = v; } }
-const clockFill = $('clock-fill'), clockLabel = $('clock-label'), timerEl = $('presnap-timer');
+const clockFill = $('clock-fill'), clockLabel = $('clock-label');
 function setClock(t, max) {
   const f = Math.min(1, t / max);
   setStyle(clockFill, 'width', (f * 100).toFixed(1) + '%');
@@ -1557,12 +1552,7 @@ function frameBody(now) {
   if (sim) {
     let alpha = 1;
     if (sim.phase === 'presnap') {
-      if (unlimitedOn()) setText(timerEl, 'Unlimited');
-      else {
-        state.presnapLeft -= dt;
-        setText(timerEl, Math.max(0, state.presnapLeft).toFixed(1) + 's');
-        if (state.presnapLeft <= 0) doSnap();
-      }
+      // v14: unlimited pre-snap — nothing ticks; the player snaps with SNAP / Space / Enter
     } else if (sim.phase !== 'done') {
       state.acc += dt;
       let guard = 0; // v10: bounded catch-up (max 12 engine steps per frame) so a slow frame can't spiral
@@ -1646,5 +1636,5 @@ function frame(now) {
 updateStats();
 nextPlay();
 requestAnimationFrame(frame);
-window.__qb3d = { setScaleDebug, scaleDbg, heightYd, boxMap, renderer, scene, state, E, D, M, nextPlay, doSnap, throwTo, setView, camera, actors, setProtection, setAudible, setMode, startPlay: (p) => nextPlay(p), updateStats, DIFF, goNext, setPoolFilter: (f) => { state.poolFilter = f; state.order = []; }, setDiff: (d) => { state.diff = d; $('difficulty').value = d; localStorage.setItem('pocketiq3d.diff', d); } };
+window.__qb3d = { routeLines, routeGroup, drawRouteOverlay, setScaleDebug, scaleDbg, heightYd, boxMap, renderer, scene, state, E, D, M, nextPlay, doSnap, throwTo, setView, camera, actors, setProtection, setAudible, setMode, startPlay: (p) => nextPlay(p), updateStats, DIFF, goNext, setPoolFilter: (f) => { state.poolFilter = f; state.order = []; }, setDiff: (d) => { state.diff = d; $('difficulty').value = d; localStorage.setItem('pocketiq3d.diff', d); } };
 window.dispatchEvent(new Event('pocketiq:ready'));

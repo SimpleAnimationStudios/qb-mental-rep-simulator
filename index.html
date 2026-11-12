@@ -30,7 +30,6 @@
       <option value="youth">Youth</option><option value="rookie">High School</option><option value="starter" selected>College</option><option value="pro">Pro</option>
     </select>
     <button id="q-det" class="ghost tiny qt" title="Detailed calls (family + variant)">Detail</button>
-    <button id="q-unl" class="ghost tiny qt" title="Unlimited pre-snap time">∞</button>
     <button id="view-btn" class="ghost" title="Toggle coach view (C)">Coach view</button>
     <div class="stat">SIM avg <b id="avg">—</b></div>
     <div class="stat">Streak <b id="streak">0</b></div>
@@ -63,7 +62,7 @@
     <button class="bubble" id="b-cov" data-pop="pop-cov"><span>COVERAGE</span><small></small></button>
     <button class="bubble" id="b-prot" data-pop="pop-prot"><span>PROTECTION</span><small></small></button>
     <button class="bubble" id="b-aud" data-pop="pop-aud"><span>AUDIBLE</span><small></small></button>
-    <button class="bubble snap" id="snap-btn" title="Snap (Space / Enter)"><span>SNAP</span><small id="presnap-timer"></small></button>
+    <button class="bubble snap" id="snap-btn" title="Snap (Space / Enter)"><span>SNAP</span></button>
   </div>
 </section>
 <div id="call-chip" hidden></div>
@@ -94,7 +93,6 @@
 <section id="history" class="panel" hidden>
   <div class="ph"><span>PROGRESS</span><button id="hist-close" class="ghost small">✕</button></div>
   <div id="hist-body"></div>
-  <label class="setting"><input type="checkbox" id="opt-unlimited"> Unlimited pre-snap time (snap manually: SNAP / Space / Enter)</label>
   <label class="setting"><input type="checkbox" id="opt-detailed"> Detailed coverage calls (family + variant) <button id="opt-detailed-auto" class="ghost tiny">auto by difficulty</button></label>
   <label class="setting"><input type="checkbox" id="routes-pro"> Allow ROUTES preview at Pro</label>
   <button id="reset-btn" class="ghost small">Clear history</button>
@@ -127,6 +125,7 @@
 <script src="js/grading.js"></script>
 <script src="js/customplay.js"></script>
 <script src="js/practice.js"></script>
+<script src="js/routeart.js"></script>
 <script type="module" src="js/game3d.js"></script>
 <script src="js/hub.js"></script>
 <script src="pwa.js"></script>

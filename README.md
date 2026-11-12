@@ -90,7 +90,7 @@ The test plays 8 reps covering tap throws, key throws and sacks, checks that no 
 ### Toggles (saved in localStorage)
 | Toggle | Where | Key | Effect |
 |---|---|---|---|
-| Unlimited pre-snap | `∞` chip in the dock, plus a checkbox in Progress | `pocketiq3d.unlimited` | The timer reads **Unlimited** and there's no auto-snap. Snap with SNAP, Space or Enter. The SIM score never charges for pre-snap time; Timing only measures post-snap decision time. |
+| ~~Unlimited pre-snap~~ | Removed in v14: pre-snap time is now always unlimited, so there is no ∞ chip and no checkbox. | ~~`pocketiq3d.unlimited`~~ (ignored and cleared) | No timer and no auto-snap. Snap with SNAP, Space or Enter. |
 | Detailed calls | `Detail` chip in the dock, plus a checkbox in Progress ("auto by difficulty" resets it) | `pocketiq3d.detailed` | **auto** (default) is on at Starter/Pro and off at Rookie. When it's on, picking a family chip shows its variant chips (VAR). When it's off, you only pick the family. |
 
 ### Grading
@@ -188,7 +188,7 @@ On software GL (SwiftShader/llvmpipe, detected via `WEBGL_debug_renderer_info`) 
   - **COVERAGE:** coverage family → variant, then pressure family → blitz variant, with the tells for whatever you picked.
   - **PROTECTION:** every O-line call with its full name.
   - **AUDIBLE:** Keep plus the checks for the current mode.
-  - **SNAP:** shows the pre-snap timer. Space and Enter still snap.
+  - **SNAP:** snaps the ball (there is no pre-snap timer since v14). Space and Enter also snap.
 - **Panels:**
   - Each opens above the bubble row, compact and semi-transparent.
   - Only one is open at a time.
@@ -479,7 +479,29 @@ Home → 🎯 Practice now builds a rep list:
   - Concepts with a reads table (`js/reads.js`) are graded from the table for the new coverage.
   - Other concepts use the existing engine probe fallback, flag `lookProbe`, the same path custom plays already use. The authored answer for these concepts belonged to the old look.
 - **Saved choices**: these are stored inside the existing profile, `localStorage['pocketiq.v8'].prefs.practice = { offense: 'random'|'pick', plays: [playId…], defense: 'own'|'pick', covs: [coverageKey…] }`. Other prefs are untouched. A Practice session record stores a short label string in `sessions[].practice` (e.g. `"Smash + Four Verticals vs 3 coverages"`).
-- **Code**: the logic is in `js/practice.js` (pure, Node-testable) and the UI is in `js/hub.js` `showPractice()`. The service-worker shell is `v13-practice1`, and `js/practice.js` is precached.
+- **Code**: the logic is in `js/practice.js` (pure, Node-testable) and the UI is in `js/hub.js` `showPractice()`. `js/practice.js` is precached (the shell was `v13-practice1` at the time).
 - **Tests**:
   - `node tests/practice-unit.cjs` covers bag fairness, empty input, Free Play pool parity and grading paths.
   - `node tests/playwright-practice.cjs`, with a server on :8766, covers the layout on desktop/phone/landscape/320px with long names, 24 real reps with only the selected plays and coverages (all of them reached), Fully random diversity, persistence and Free Play being unaffected.
+
+## v14 — Pre-snap time is always unlimited
+
+- Every mode now has unlimited pre-snap time. That covers Normal, Passing and Running Free Play, Practice, Call it and Just read, scored sessions, and Daily. There is no countdown, no auto-snap and no penalty for pre-snap time. Take as long as you need to enter the coverage, pressure, protection and audible calls, then snap with SNAP, Space or Enter.
+- Removed:
+  - the `∞` HUD chip (`#q-unl`);
+  - the "Unlimited pre-snap time" checkbox in Progress (`#opt-unlimited`);
+  - the countdown on the SNAP bubble (`#presnap-timer`);
+  - the per-level `presnap` seconds in `DIFF`;
+  - the "N s pre-snap" text in the level notes.
+- The old `localStorage['pocketiq3d.unlimited']` key is ignored and removed on load, so an old `'off'` value can't bring the timer back.
+- Everything after the snap is unchanged: pocket clock, rush, and throw-timing grading. Timing is measured from the snap, as it always was.
+- **Route art (hold ROUTES / R):** the routes are redrawn in a playbook style, defined in `js/routeart.js` (geometry only; route mechanics and AI are unchanged).
+  - **Geometry:** lines are built from each route's authored waypoints, the exact break points the engine runs, not the sampled sim path. That gives straight segments with crisp mitred breaks. Rounded arcs appear only on routes that really curve: wheel, flat/swing, check-down, screens, arrow, Texas and boot flat. Sub-yard jogs are merged, and comebacks (hitch, curl, sit) stay visible as a hook of at least 1 yd.
+  - **Drawing:** lines start at the receiver's feet. Pass routes end in an arrowhead and blocks end in a T bar.
+  - **Style:** lines are drawn in screen space with a fixed pixel width in every camera mode and at every distance, using the read colours (1 green, 2 yellow, 3 blue, check-down pink, blocks white) with a dark outline and a faint halo.
+  - **Removed:** the old 3D turf ribbon meshes, which doubled the art and could z-fight.
+  - **Fallback:** a path rebuilt by the protection logic (e.g. a back who chips, then releases) is traced and simplified with Douglas-Peucker.
+- The service-worker shell is `v14-unlimited1`, and `js/routeart.js` is precached.
+- Tests:
+  - `node tests/routeart-unit.cjs` covers every play and custom specs: no errors, line/arrow/T-bar counts, no wobble, art stays on the engine path, and lines start at the feet.
+  - `node tests/playwright-unlimited.cjs` (server on :8766) checks every mode/game type/session kind, waiting about 180 s of game time with no auto-snap. It also checks that the old `'off'` key is removed, there is no ∞ chip or time control, there is no HUD overflow on desktop/phone/landscape, and the ROUTES overlay builds and paints for every play.

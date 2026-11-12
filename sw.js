@@ -7,7 +7,7 @@
  * - Updates: a changed sw.js installs the new cache in the background and waits. The page shows an "Update ready"
  *   button; nothing reloads mid-rep unless the player taps it. Closing every Pocket IQ window/tab also applies it.
  * - Bump VERSION whenever any precached file changes (tests/pwa-check.cjs verifies the list covers every runtime file). */
-const VERSION = 'v13-practice1';
+const VERSION = 'v14-unlimited1';
 const PREFIX = 'pocketiq3d-shell-';
 const CACHE = PREFIX + VERSION;
 const ASSETS = [
@@ -28,6 +28,7 @@ const ASSETS = [
   'js/grading.js',
   'js/customplay.js',
   'js/practice.js',
+  'js/routeart.js',
   'js/game3d.js',
   'js/rig3d.js',
   'js/hub.js',

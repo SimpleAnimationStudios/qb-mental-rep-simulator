@@ -13,7 +13,7 @@ const ok = (n, c, i) => { console.log((c ? 'PASS ' : 'FAIL ') + n, i !== undefin
   const centre = () => Q(() => { const W = innerWidth, H = innerHeight; return [...document.querySelectorAll('#presnap .bubble, #presnap .pop')].filter((e) => e.offsetParent).some((e) => { const r = e.getBoundingClientRect(); return !(r.right < W * .25 || r.left > W * .75 || r.bottom < H * .2 || r.top > H * .75); }); });
   const glow = () => Q(() => Object.fromEntries(['b-cov', 'b-prot', 'b-aud'].map((id) => { const e = document.getElementById(id); return [id, (e.classList.contains('ans') ? (e.classList.contains('full') ? 'full' : 'glow') : 'none') + '|' + e.querySelector('small').textContent]; })));
   ok('bubbles present, no dock bar', await Q(() => ['b-cov', 'b-prot', 'b-aud', 'snap-btn'].every((i) => document.getElementById(i).offsetParent) && !document.querySelector('.dock')));
-  ok('toggles in top HUD', await Q(() => !!document.querySelector('#hud-top #q-det') && !!document.querySelector('#hud-top #q-unl')));
+  ok('toggles in top HUD', await Q(() => !!document.querySelector('#hud-top #q-det') && !document.querySelector('#q-unl')));  // v14: ∞ chip removed (pre-snap always unlimited)
   ok('nothing glows initially', Object.values(await glow()).every((v) => v.startsWith('none')), await glow());
   ok('closed bubbles clear of centre', !(await centre()));
   await p.screenshot({ path: S + '01-presnap-bubbles-closed.png' });

@@ -6,10 +6,10 @@
   'use strict';
   const KEY = 'pocketiq.v8', SESSION_LEN = 10;
   const LEVELS = [
-    { id: 'youth', label: 'Youth', diff: 'youth', mult: 0.8, note: '15 s pre-snap · no disguise · 1.45× pocket time' },
-    { id: 'hs', label: 'High School', diff: 'rookie', mult: 0.9, note: '12 s pre-snap · no disguise · 1.3× pocket time' },
-    { id: 'college', label: 'College', diff: 'starter', mult: 1.0, note: '8 s pre-snap · some disguise · normal pocket' },
-    { id: 'pro', label: 'Pro', diff: 'pro', mult: 1.1, note: '5 s pre-snap · heavy disguise · 0.85× pocket, tighter windows' },
+    { id: 'youth', label: 'Youth', diff: 'youth', mult: 0.8, note: 'no disguise · 1.45× pocket time' },
+    { id: 'hs', label: 'High School', diff: 'rookie', mult: 0.9, note: 'no disguise · 1.3× pocket time' },
+    { id: 'college', label: 'College', diff: 'starter', mult: 1.0, note: 'some disguise · normal pocket' },
+    { id: 'pro', label: 'Pro', diff: 'pro', mult: 1.1, note: 'heavy disguise · 0.85× pocket, tighter windows' },
   ];
   const UNLOCK_AVG = 70;
   const $ = (id) => document.getElementById(id);
@@ -126,7 +126,7 @@
   @media (max-width:760px){.pi-hero{grid-template-columns:1fr;justify-items:center;text-align:center}.pi-herotxt{align-items:center}.pi-chartwrap{width:100%}.pi-grid3{grid-template-columns:1fr}.pi-hero .pi-play{font-size:24px;padding:16px 44px}#pi-home .pi-tiles{grid-template-columns:1fr 1fr}}
   #pi-hud{position:fixed;bottom:86px;left:12px;z-index:21;background:#0b1220cc;border:1px solid #1e293b;border-radius:999px;padding:4px 12px;font-size:12px;color:#cbd5e1;pointer-events:none}
   #pi-hud b{color:#3ee08f}
-  body.pi-immersive #hud-top .right select,body.pi-immersive #q-det,body.pi-immersive #q-unl,body.pi-immersive #help{display:none}
+  body.pi-immersive #hud-top .right select,body.pi-immersive #q-det,body.pi-immersive #help{display:none}
   #res-extra{display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px;align-items:start;margin:6px 0;position:relative;overflow:hidden}#res-extra .rwrap{width:72px;height:72px;flex:none}#res-extra .pi-sring{display:block;width:72px;height:72px;transform:none!important}#res-extra .seen{min-width:0;overflow-wrap:anywhere}
   @media (max-height:430px){#res-extra{grid-template-columns:56px minmax(0,1fr)}#res-extra .rwrap,#res-extra .pi-sring{width:56px;height:56px}}
   #res-extra .seen{font-size:12px;line-height:1.5}#res-extra .tbar{position:relative;height:10px;background:#1f2937;border-radius:5px;margin-top:6px}
